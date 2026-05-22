@@ -1,10 +1,10 @@
 # Firebase App Hosting configuration.
 # https://firebase.google.com/docs/app-hosting/configure
 #
-# NEXT_PUBLIC_* values are inlined into the client bundle at build time, so
-# they're already public — declaring them inline is fine.
-# Everything else (Admin SDK, Flutterwave, Africa's Talking, JWT secret,
-# demo-reset token, Lira shared secret) references Google Secret Manager.
+# NEXT_PUBLIC_* values are inlined into the client bundle at build time,
+# so they're already public — declaring them inline is fine.
+# Server-only secrets reference Google Secret Manager and get injected at
+# RUNTIME only.
 
 runConfig:
   cpu: 1
@@ -48,7 +48,7 @@ env:
     secret: FIREBASE_ADMIN_PRIVATE_KEY
     availability: [RUNTIME]
 
-  # ---------- Africa's Talking ----------
+  # ---------- Africa's Talking (used by /api/otp/send) ----------
   - variable: AT_USERNAME
     value: sandbox
     availability: [RUNTIME]
@@ -59,23 +59,11 @@ env:
     secret: AT_API_KEY
     availability: [RUNTIME]
 
-  # ---------- Flutterwave (kept around for webhook signature only) ----------
-  - variable: FLW_PUBLIC_KEY
-    secret: FLW_PUBLIC_KEY
-    availability: [RUNTIME]
-  - variable: FLW_SECRET_KEY
-    secret: FLW_SECRET_KEY
-    availability: [RUNTIME]
+  # ---------- Flutterwave webhook signature ----------
+  # (We mock the card provider, but the webhook handler still verifies any
+  # inbound `verif-hash` header against this secret.)
   - variable: FLW_SECRET_HASH
     secret: FLW_SECRET_HASH
-    availability: [RUNTIME]
-
-  # ---------- Lira integration ----------
-  - variable: LIRA_API_BASE
-    secret: LIRA_API_BASE
-    availability: [RUNTIME]
-  - variable: LIRA_SHARED_SECRET
-    secret: LIRA_SHARED_SECRET
     availability: [RUNTIME]
 
   # ---------- Demo + auth ----------
