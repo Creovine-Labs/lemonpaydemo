@@ -1,117 +1,127 @@
 "use client";
 
-import { signOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { auth, db } from "@/lib/firebase-client";
+import Link from "next/link";
+import { BalanceCard } from "@/components/BalanceCard";
+import { PageHeader } from "@/components/PageHeader";
+import { QuickActions } from "@/components/QuickActions";
+import { TransactionRow } from "@/components/TransactionRow";
+import { VirtualCard } from "@/components/VirtualCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useCards,
+  usePrimaryAccount,
+  useTransactions,
+  useUserDoc,
+} from "@/lib/hooks";
 import { useAuth } from "@/lib/use-auth";
-import { COLLECTIONS, type User as LemonUser } from "@/lib/types";
 
-/**
- * Phase 1 placeholder. Shows the signed-in user's UID + Firestore profile so
- * we can confirm auth UID and seed doc ID match. Phase 2 replaces this with
- * the real wallet/home screen.
- */
-export default function AppHome() {
-  const router = useRouter();
+export default function HomePage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<LemonUser | null>(null);
-  const [profileError, setProfileError] = useState<string | null>(null);
+  const uid = user?.uid;
 
-  useEffect(() => {
-    if (!user) return;
-    const ref = doc(db, COLLECTIONS.users, user.uid);
-    return onSnapshot(
-      ref,
-      (snap) => {
-        if (!snap.exists()) {
-          setProfileError("No Firestore profile for this UID.");
-          return;
-        }
-        setProfile(snap.data() as LemonUser);
-        setProfileError(null);
-      },
-      (err) => setProfileError(err.message),
-    );
-  }, [user]);
-
-  async function handleSignOut() {
-    await signOut(auth);
-    router.replace("/login");
-  }
+  const profile = useUserDoc(uid);
+  const account = usePrimaryAccount(uid);
+  const recent = useTransactions(uid, 5);
+  const cards = useCards(uid);
+  const primaryCard = cards.data[0];
 
   if (!user) return null;
 
   return (
-    <main className="flex flex-1 flex-col items-center px-6 py-16">
-      <div className="w-full max-w-md space-y-8">
-        <header>
-          <p className="text-xs uppercase tracking-widest text-neutral-500">
-            Lemonpay · Phase 1
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            {profile?.full_name ?? "Welcome"}
-          </h1>
-        </header>
+    <div className="space-y-8">
+      <PageHeader
+        subtitle={`Hi, ${firstName(profile.data?.full_name) || "there"}`}
+        title="Overview"
+      />
 
-        <section className="rounded-lg border border-neutral-800 bg-neutral-900/40 p-5">
-          <h2 className="mb-3 text-sm font-medium text-neutral-300">
-            Auth ↔ Firestore handshake
-          </h2>
-          <dl className="space-y-2 text-sm">
-            <Row label="Auth UID" value={user.uid} mono />
-            <Row label="Auth email" value={user.email ?? "—"} />
-            <Row
-              label="Firestore name"
-              value={profile?.full_name ?? (profileError ? "(error)" : "loading…")}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left column: balance + quick actions + activity */}
+        <div className="space-y-6 lg:col-span-2">
+          {account.loading || !account.data ? (
+            <Skeleton className="h-40 w-full rounded-2xl bg-neutral-100" />
+          ) : (
+            <BalanceCard
+              balanceRwf={account.data.balance_rwf}
+              accountNumberMasked={account.data.account_number_masked}
+              accountType={account.data.type}
             />
-            <Row
-              label="Firestore status"
-              value={profile?.status ?? (profileError ? "(error)" : "loading…")}
-            />
-            <Row
-              label="Firestore plan"
-              value={profile?.plan ?? (profileError ? "(error)" : "loading…")}
-            />
-          </dl>
-          {profileError && (
-            <p className="mt-3 text-xs text-red-400">{profileError}</p>
           )}
-        </section>
 
-        <Button
-          onClick={handleSignOut}
-          variant="outline"
-          className="h-10 border-neutral-700 bg-transparent text-neutral-100 hover:bg-neutral-900 hover:text-neutral-50"
-        >
-          Sign out
-        </Button>
+          <section className="rounded-2xl border border-neutral-200 bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-neutral-900">
+              Quick actions
+            </h2>
+            <QuickActions />
+          </section>
+
+          <section className="rounded-2xl border border-neutral-200 bg-white p-6">
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 className="text-base font-semibold text-neutral-900">
+                Recent activity
+              </h2>
+              <Link
+                href="/app/transactions"
+                className="text-sm font-medium text-neutral-700 underline-offset-4 hover:underline"
+              >
+                See all
+              </Link>
+            </div>
+
+            {recent.loading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-14 w-full rounded-lg bg-neutral-100" />
+                <Skeleton className="h-14 w-full rounded-lg bg-neutral-100" />
+                <Skeleton className="h-14 w-full rounded-lg bg-neutral-100" />
+              </div>
+            ) : recent.data.length === 0 ? (
+              <p className="rounded-lg border border-dashed border-neutral-200 px-4 py-10 text-center text-sm text-neutral-500">
+                No transactions yet.
+              </p>
+            ) : (
+              <ul className="divide-y divide-neutral-100">
+                {recent.data.map((tx) => (
+                  <li key={tx.id}>
+                    <TransactionRow tx={tx} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        {/* Right column: card preview */}
+        <div className="space-y-6">
+          {primaryCard && (
+            <section className="rounded-2xl border border-neutral-200 bg-white p-5">
+              <div className="mb-3 flex items-baseline justify-between">
+                <h2 className="text-sm font-semibold text-neutral-900">
+                  Your card
+                </h2>
+                <Link
+                  href={`/app/cards/${primaryCard.id}`}
+                  className="text-xs font-medium text-neutral-700 underline-offset-4 hover:underline"
+                >
+                  Manage
+                </Link>
+              </div>
+              <Link
+                href={`/app/cards/${primaryCard.id}`}
+                className="block transition-transform hover:scale-[1.01]"
+              >
+                <VirtualCard
+                  card={primaryCard}
+                  holderName={profile.data?.full_name ?? ""}
+                />
+              </Link>
+            </section>
+          )}
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
 
-function Row({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd
-        className={
-          "truncate text-neutral-100 " + (mono ? "font-mono text-xs" : "")
-        }
-      >
-        {value}
-      </dd>
-    </div>
-  );
+function firstName(full?: string): string {
+  if (!full) return "";
+  return full.trim().split(/\s+/)[0];
 }

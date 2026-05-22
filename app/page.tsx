@@ -1,64 +1,72 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { LemonLogo } from "@/components/LemonLogo";
 
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-      <div className="flex w-full max-w-2xl flex-col items-center gap-10 text-center">
-        <LemonLogo />
-
-        <div className="flex flex-col gap-4">
-          <h1 className="text-5xl font-semibold tracking-tight text-neutral-50 sm:text-6xl">
-            Banking, with a <span className="text-yellow-300">fresh twist.</span>
-          </h1>
-          <p className="text-lg text-neutral-400 sm:text-xl">
-            A mobile-first neobank built for Rwanda. Send, save, and spend with
-            a card that fits your life.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
+    <div className="flex min-h-screen flex-col">
+      {/* Top bar */}
+      <header className="flex items-center justify-between border-b border-neutral-200 px-8 py-5">
+        <Link href="/" className="flex items-center gap-2">
+          <LemonLogo className="h-7 w-7" />
+          <span className="text-lg font-semibold tracking-tight text-neutral-900">
+            Lemonpay
+          </span>
+        </Link>
+        <nav className="flex items-center gap-2">
           <Button
-            size="lg"
-            className="h-11 bg-yellow-300 px-6 text-neutral-950 hover:bg-yellow-200"
-          >
-            <Link href="/signup">Create an account</Link>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="h-11 border-neutral-700 bg-transparent px-6 text-neutral-100 hover:bg-neutral-900 hover:text-neutral-50"
+            variant="ghost"
+            className="h-10 px-4 text-neutral-700 hover:bg-neutral-100"
           >
             <Link href="/login">Sign in</Link>
           </Button>
+          <Button className="h-10 bg-neutral-900 px-4 text-white hover:bg-neutral-800">
+            <Link href="/signup">Get started</Link>
+          </Button>
+        </nav>
+      </header>
+
+      {/* Hero */}
+      <main className="flex flex-1 items-center justify-center px-8 py-24">
+        <div className="flex w-full max-w-3xl flex-col items-center gap-8 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
+            Lemonpay · Demo build
+          </p>
+
+          <h1 className="text-5xl font-semibold tracking-tight text-neutral-900 sm:text-6xl md:text-7xl">
+            Banking, <span className="text-neutral-500">simplified.</span>
+          </h1>
+
+          <p className="max-w-xl text-lg text-neutral-600 sm:text-xl">
+            A clean, fast neobank for Rwanda. Send, save, and spend with a card
+            that fits your life — no clutter, no surprises.
+          </p>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button
+              size="lg"
+              className="h-11 bg-neutral-900 px-6 text-white hover:bg-neutral-800"
+            >
+              <Link href="/signup">Create an account</Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-11 border-neutral-300 bg-white px-6 text-neutral-800 hover:bg-neutral-50"
+            >
+              <Link href="/login">Sign in</Link>
+            </Button>
+          </div>
         </div>
+      </main>
 
-        <p className="text-xs uppercase tracking-widest text-neutral-600">
-          Demo build · Phase 0
-        </p>
-      </div>
-    </main>
-  );
-}
-
-function LemonLogo() {
-  return (
-    <div className="flex items-center gap-3">
-      <svg
-        viewBox="0 0 40 40"
-        className="h-10 w-10"
-        aria-hidden="true"
-      >
-        <circle cx="20" cy="20" r="18" fill="#FDE047" />
-        <path
-          d="M20 6 L20 34 M6 20 L34 20 M10 10 L30 30 M30 10 L10 30"
-          stroke="#1F2937"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          opacity="0.4"
-        />
-      </svg>
-      <span className="text-xl font-semibold tracking-tight">Lemonpay</span>
+      {/* Footer */}
+      <footer className="border-t border-neutral-200 px-8 py-6 text-xs text-neutral-500">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span>© Lemonpay — demo build for the Lira platform.</span>
+          <span>Built in Kigali · {new Date().getFullYear()}</span>
+        </div>
+      </footer>
     </div>
   );
 }

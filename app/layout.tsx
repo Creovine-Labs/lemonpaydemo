@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lemonpay — Banking, with a fresh twist.",
+  title: "Lemonpay — Banking, simplified.",
   description:
     "Lemonpay is a mobile-first neobank built for Rwanda. Send, save, and spend with a card that fits your life.",
 };
@@ -28,8 +29,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-50">
+      <body className="min-h-full flex flex-col bg-white text-neutral-900">
         {children}
+        <Toaster theme="light" position="top-center" />
       </body>
     </html>
   );
