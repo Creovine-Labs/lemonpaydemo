@@ -14,6 +14,8 @@ interface RouteCtx {
   params: Promise<{ id: string }>;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   const t0 = Date.now();
   const { id: cardId } = await ctx.params;

@@ -12,6 +12,8 @@ import { mockKyc } from "@/lib/kyc-mock";
 import { kycSubmitBody } from "@/lib/schemas";
 import { COLLECTIONS } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/kyc/submit`;

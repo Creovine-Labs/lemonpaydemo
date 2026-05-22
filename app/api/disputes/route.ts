@@ -18,6 +18,8 @@ import { adminDb, FieldValue } from "@/lib/firebase-admin";
 import { disputeBody } from "@/lib/schemas";
 import { COLLECTIONS, type Card, type Transaction } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/disputes`;

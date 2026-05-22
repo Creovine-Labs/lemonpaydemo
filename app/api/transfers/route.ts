@@ -24,6 +24,8 @@ type RunResult =
     }
   | { ok: false; status: number; error: { code: string; message: string } };
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/transfers`;

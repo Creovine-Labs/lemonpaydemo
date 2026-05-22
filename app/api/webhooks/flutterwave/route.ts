@@ -17,6 +17,8 @@ interface FlwWebhookEvent {
   data: Record<string, unknown>;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/webhooks/flutterwave`;

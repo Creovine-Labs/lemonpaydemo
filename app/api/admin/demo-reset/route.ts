@@ -14,6 +14,8 @@ import { runSeed } from "@/seed/runner";
  *   { scope: "all" }                → wipe everything, re-seed all customers
  *   { scope: "user", user_id: "…" } → wipe one user's docs only
  */
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/admin/demo-reset`;

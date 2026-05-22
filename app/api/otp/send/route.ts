@@ -18,6 +18,8 @@ const RATE_LIMIT = 3; // max OTPs per user per hour
 const RATE_WINDOW_MS = 60 * 60 * 1000;
 const TTL_SECONDS = 5 * 60;
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
   const endpoint = `/api/otp/send`;
