@@ -124,9 +124,12 @@ export async function seedCustomers(): Promise<SeededCustomer[]> {
     let cardId: string | undefined;
     if (c.card) {
       const cardRef = adminDb.collection(COLLECTIONS.cards).doc();
+      // Card provider is mocked (Flutterwave discontinued virtual cards).
+      // The `provider_card_id` is what /api/cards/* endpoints pass to the
+      // mock card provider in lib/card-provider.ts.
       await cardRef.set({
         user_id: uid,
-        flutterwave_card_id: "tbd_phase_3",
+        flutterwave_card_id: `mcp_seed_${c.handle}_${cardRef.id.slice(0, 8)}`,
         last4: c.card.last4,
         brand: c.card.brand,
         type: c.card.type,
