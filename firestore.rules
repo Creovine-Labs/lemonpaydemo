@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can read + update their own profile (limited fields)
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId
+                    && !("status" in request.resource.data.diff(resource.data).affectedKeys())
+                    && !("plan" in request.resource.data.diff(resource.data).affectedKeys());
+      allow create: if request.auth.uid == userId;
+    }
+
+    // Accounts: read-only for owner; writes only via Admin SDK (server)
+    match /accounts/{accountId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow write: if false;
+    }
+
+    // Transactions: read-only for owner; writes via Admin SDK
+    match /transactions/{txId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow write: if false;
+    }
+
+    // Cards: read for owner, no writes (must use endpoints to freeze/replace)
+    match /cards/{cardId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow write: if false;
+    }
+
+    // Merchant locks: owner can create/delete their own
+    match /merchant_locks/{lockId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+      allow delete: if request.auth.uid == resource.data.user_id;
+      allow update: if false;
+    }
+
+    // Disputes: read for owner; writes via endpoint only
+    match /disputes/{disputeId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow write: if false;
+    }
+
+    // Limit requests: owner can create; server resolves
+    match /limit_requests/{reqId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id;
+      allow update: if false;
+    }
+
+    // Emails: owner can read + create outbound
+    match /emails/{emailId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow create: if request.auth.uid == request.resource.data.user_id
+                    && request.resource.data.direction == "outbound";
+      allow update, delete: if false;
+    }
+
+    // OTP codes: server-only, never client-readable
+    match /otp_codes/{otpId} {
+      allow read, write: if false;
+    }
+
+    // KYC attempts: server-only writes; owner can read
+    match /kyc_attempts/{attemptId} {
+      allow read: if request.auth.uid == resource.data.user_id;
+      allow write: if false;
+    }
+
+    // API logs: server-only
+    match /api_logs/{logId} {
+      allow read, write: if false;
+    }
+  }
+}

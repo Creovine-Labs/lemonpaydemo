@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// KYC photos: only the uploader can read/write their own files.
+// The /kyc/{uid}/{attemptId}/ convention is set by /api/kyc/submit.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /kyc/{uid}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
