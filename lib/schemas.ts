@@ -39,6 +39,18 @@ export const refundHeaders = z.object({
   "idempotency-key": idempotencyKey,
 });
 
+// ---------- /api/transfers ----------
+export const transferBody = z.object({
+  recipient_email: z.string().trim().toLowerCase().email(),
+  amount_rwf: rwfAmount,
+  note: z.string().max(280).optional(),
+});
+export type TransferBody = z.infer<typeof transferBody>;
+
+export const transferHeaders = z.object({
+  "idempotency-key": idempotencyKey,
+});
+
 // ---------- /api/disputes ----------
 export const disputeBody = z.object({
   transaction_id: z.string().min(1),

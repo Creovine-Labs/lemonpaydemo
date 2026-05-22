@@ -10,7 +10,8 @@ import { useAuth } from "@/lib/use-auth";
 
 /**
  * Authenticated app shell. Desktop gets a left sidebar; mobile collapses to
- * a top header + bottom tab bar. Gates on Firebase Auth state.
+ * a top header + bottom tab bar. Gates on Firebase Auth state and on the
+ * user's KYC status — accounts not yet active get bounced to /signup/pending.
  */
 export default function AppLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -21,10 +22,25 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     if (!loading && !user) router.replace("/login");
   }, [loading, user, router]);
 
-  if (loading || !user) {
+  useEffect(() => {
+    const status = profile.data?.status;
+    if (status && status !== "active") {
+      router.replace("/signup/pending");
+    }
+  }, [profile.data?.status, router]);
+
+  if (loading || !user || profile.loading) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <p className="text-sm text-neutral-500">Loading…</p>
+      </div>
+    );
+  }
+
+  if (profile.data && profile.data.status !== "active") {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-neutral-500">Redirecting…</p>
       </div>
     );
   }

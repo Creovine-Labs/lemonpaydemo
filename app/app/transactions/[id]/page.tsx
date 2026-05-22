@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { PageHeader } from "@/components/PageHeader";
+import { RefundFlow } from "@/components/RefundFlow";
 import { TransactionDetail } from "@/components/TransactionDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransaction } from "@/lib/hooks";
@@ -26,6 +27,7 @@ export default function TransactionDetailPage({
         subtitle="Transaction"
         title="Detail"
         back="/app/transactions"
+        actions={tx.data && isOwned ? <RefundFlow tx={tx.data} /> : null}
       />
 
       <div className="mx-auto max-w-lg">

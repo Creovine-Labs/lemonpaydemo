@@ -7,7 +7,7 @@ export default function NotificationsSettingsPage() {
     <ComingSoonPage
       subtitle="Settings"
       title="Notifications"
-      body="Push, SMS, and email preferences are out of scope for the demo build."
+      body="Push, SMS, and email preferences aren't part of the demo scope."
       back="/app/settings"
     />
   );

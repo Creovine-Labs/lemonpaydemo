@@ -1,19 +1,18 @@
-import { spawn } from "node:child_process";
 import { type NextRequest, NextResponse } from "next/server";
 import { jsonErr, jsonOk, logApiCall } from "@/lib/api-helpers";
 import { adminDb } from "@/lib/firebase-admin";
 import { demoResetBody } from "@/lib/schemas";
 import { COLLECTIONS } from "@/lib/types";
+import { runSeed } from "@/seed/runner";
 
 /**
- * Wipes the user-scoped Firestore collections and re-runs the seed.
- * Token-gated by DEMO_RESET_TOKEN. Not a Firebase ID token — a static secret
- * shared between the salesperson's reset shortcut and this endpoint.
+ * Wipes user-scoped Firestore data and re-seeds. Token-gated by
+ * DEMO_RESET_TOKEN — not a Firebase ID token, a static secret shared
+ * between the salesperson's reset UI and this endpoint.
  *
- * Implementation: instead of re-implementing the seed in this route, we
- * delete the docs and shell out to `npm run seed` so the source of truth
- * for seed data stays in seed/*. The endpoint awaits the spawned process so
- * the client gets a clean done/failed answer.
+ * Two scopes:
+ *   { scope: "all" }                → wipe everything, re-seed all customers
+ *   { scope: "user", user_id: "…" } → wipe one user's docs only
  */
 export async function POST(req: NextRequest) {
   const t0 = Date.now();
@@ -30,10 +29,7 @@ export async function POST(req: NextRequest) {
     const header = req.headers.get("authorization") ?? "";
     const match = header.match(/^Bearer\s+(.+)$/i);
     if (!match || match[1] !== expected) {
-      return jsonErr(
-        { code: "unauthorized", message: "Bad demo reset token" },
-        401,
-      );
+      return jsonErr({ code: "unauthorized", message: "Bad demo reset token" }, 401);
     }
 
     let body: { scope: "all" | "user"; user_id?: string } = { scope: "all" };
@@ -67,20 +63,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Full reset: shell out to `npm run seed` (which already wipes + reseeds).
-    const seedResult = await runSeed();
-    if (!seedResult.ok) {
+    try {
+      const report = await runSeed({ wipe: true });
+      return jsonOk({
+        reset_at: new Date().toISOString(),
+        scope: "all",
+        duration_ms: report.duration_ms,
+        wiped: report.wiped,
+        customers: report.customers,
+        transactions_seeded: report.transactions_seeded,
+      });
+    } catch (err) {
       return jsonErr(
-        { code: "seed_failed", message: seedResult.error.slice(0, 500) },
+        {
+          code: "seed_failed",
+          message: err instanceof Error ? err.message : "Seed crashed",
+        },
         500,
       );
     }
-
-    return jsonOk({
-      reset_at: new Date().toISOString(),
-      scope: "all",
-      seed_output_tail: seedResult.output.split("\n").slice(-20).join("\n"),
-    });
   };
 
   const res = await handle();
@@ -119,23 +120,4 @@ async function wipeForUser(uid: string): Promise<Record<string, number>> {
     cleared[col] = snap.size;
   }
   return cleared;
-}
-
-function runSeed(): Promise<{ ok: true; output: string } | { ok: false; error: string }> {
-  return new Promise((resolve) => {
-    const proc = spawn("npm", ["run", "seed"], {
-      cwd: process.cwd(),
-      env: process.env,
-      shell: true,
-    });
-    let stdout = "";
-    let stderr = "";
-    proc.stdout?.on("data", (chunk: Buffer) => (stdout += chunk.toString()));
-    proc.stderr?.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
-    proc.on("close", (code) => {
-      if (code === 0) resolve({ ok: true, output: stdout });
-      else resolve({ ok: false, error: stderr || `seed exited with code ${code}` });
-    });
-    proc.on("error", (err) => resolve({ ok: false, error: err.message }));
-  });
 }

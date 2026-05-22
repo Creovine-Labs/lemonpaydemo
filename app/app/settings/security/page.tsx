@@ -7,7 +7,7 @@ export default function SecuritySettingsPage() {
     <ComingSoonPage
       subtitle="Settings"
       title="Security"
-      body="Password, MFA, and active sessions ship in a later phase."
+      body="Password, MFA, and active sessions aren't part of the demo scope."
       back="/app/settings"
     />
   );

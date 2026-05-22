@@ -16,6 +16,9 @@ import {
   COLLECTIONS,
   type Account,
   type Card,
+  type Email,
+  type LimitRequest,
+  type MerchantLock,
   type Transaction,
   type User,
   type WithId,
@@ -199,6 +202,112 @@ export function useCards(
         const data = snap.docs.map((d) => ({
           id: d.id,
           ...(d.data() as Card),
+        }));
+        setState({ data, loading: false, error: null });
+      },
+      (err) => setState({ data: [], loading: false, error: err.message }),
+    );
+  }, [uid]);
+
+  return state;
+}
+
+/** Subscribe to the user's emails, newest first. */
+export function useEmails(
+  uid: string | undefined,
+): ListState<WithId<Email>> {
+  const [state, setState] = useState<ListState<WithId<Email>>>({
+    data: [],
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!uid) {
+      setState({ data: [], loading: false, error: null });
+      return;
+    }
+    const q = query(
+      collection(db, COLLECTIONS.emails),
+      where("user_id", "==", uid),
+      orderBy("sent_at", "desc"),
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as Email),
+        }));
+        setState({ data, loading: false, error: null });
+      },
+      (err) => setState({ data: [], loading: false, error: err.message }),
+    );
+  }, [uid]);
+
+  return state;
+}
+
+/** Subscribe to the user's merchant_locks. */
+export function useMerchantLocks(
+  uid: string | undefined,
+): ListState<WithId<MerchantLock>> {
+  const [state, setState] = useState<ListState<WithId<MerchantLock>>>({
+    data: [],
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!uid) {
+      setState({ data: [], loading: false, error: null });
+      return;
+    }
+    const q = query(
+      collection(db, COLLECTIONS.merchant_locks),
+      where("user_id", "==", uid),
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as MerchantLock),
+        }));
+        setState({ data, loading: false, error: null });
+      },
+      (err) => setState({ data: [], loading: false, error: err.message }),
+    );
+  }, [uid]);
+
+  return state;
+}
+
+/** Subscribe to the user's pending + decided limit requests. */
+export function useLimitRequests(
+  uid: string | undefined,
+): ListState<WithId<LimitRequest>> {
+  const [state, setState] = useState<ListState<WithId<LimitRequest>>>({
+    data: [],
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    if (!uid) {
+      setState({ data: [], loading: false, error: null });
+      return;
+    }
+    const q = query(
+      collection(db, COLLECTIONS.limit_requests),
+      where("user_id", "==", uid),
+    );
+    return onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as LimitRequest),
         }));
         setState({ data, loading: false, error: null });
       },

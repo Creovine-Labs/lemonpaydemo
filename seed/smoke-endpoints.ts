@@ -290,6 +290,63 @@ async function main() {
   const otpId = crypto.randomUUID();
   void otpId; // Verify-without-real-OTP is hard to smoke without leaking the code; skip.
 
+  // ----- Transfers -----
+  console.log("\nTransfers");
+  const transferRes = await post<{ recipient_name: string; amount_rwf: number }>(
+    `/api/transfers`,
+    {
+      idToken,
+      headers: { "Idempotency-Key": `transfer_smoke_${Date.now()}` },
+      body: {
+        recipient_email: "priya@lemonpay.demo",
+        amount_rwf: 5000,
+        note: "smoke test",
+      },
+    },
+  );
+  if (transferRes.envelope.ok) {
+    pass(
+      "transfers.send",
+      `RWF 5,000 → ${transferRes.envelope.data.recipient_name}`,
+    );
+  } else {
+    fail("transfers.send", JSON.stringify(transferRes));
+  }
+
+  const overdraftRes = await post(`/api/transfers`, {
+    idToken,
+    headers: { "Idempotency-Key": `transfer_overdraft_${Date.now()}` },
+    body: {
+      recipient_email: "priya@lemonpay.demo",
+      amount_rwf: 999_999_999,
+    },
+  });
+  if (
+    !overdraftRes.envelope.ok &&
+    overdraftRes.envelope.error.code === "insufficient_funds"
+  ) {
+    pass("transfers.overdraft", "rejected as expected");
+  } else {
+    fail("transfers.overdraft", JSON.stringify(overdraftRes));
+  }
+
+  const selfRes = await post(`/api/transfers`, {
+    idToken,
+    headers: { "Idempotency-Key": `transfer_self_${Date.now()}` },
+    body: {
+      recipient_email: "lola@lemonpay.demo",
+      amount_rwf: 100,
+    },
+  });
+  if (
+    !selfRes.envelope.ok &&
+    selfRes.envelope.error.code === "cannot_send_to_self"
+  ) {
+    pass("transfers.self", "rejected as expected");
+  } else {
+    fail("transfers.self", JSON.stringify(selfRes));
+  }
+
   // ----- KYC submit (uses seeded result for Lola? she's not in the seed table) -----
   console.log("\nKYC");
   const kycRes = await post(`/api/kyc/submit`, {
