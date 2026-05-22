@@ -2,10 +2,12 @@
 
 import { ChevronRight, RefreshCw, Snowflake } from "lucide-react";
 import Link from "next/link";
-import { use } from "react";
+import { use, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
 import { VirtualCard } from "@/components/VirtualCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiPost } from "@/lib/api-client";
 import { useCard, useUserDoc } from "@/lib/hooks";
 import { useAuth } from "@/lib/use-auth";
 
@@ -18,10 +20,31 @@ export default function CardDetailPage({
   const { user } = useAuth();
   const profile = useUserDoc(user?.uid);
   const card = useCard(id);
+  const [busy, setBusy] = useState<null | "freeze" | "unfreeze">(null);
 
   if (!user) return null;
 
   const isOwned = !card.data || card.data.user_id === user.uid;
+
+  async function toggleFreeze() {
+    if (!card.data) return;
+    const willFreeze = card.data.status === "active";
+    setBusy(willFreeze ? "freeze" : "unfreeze");
+    try {
+      const res = willFreeze
+        ? await apiPost<{ status: string }>(`/api/cards/${id}/freeze`, {
+            body: { reason: "user_request" },
+          })
+        : await apiPost<{ status: string }>(`/api/cards/${id}/unfreeze`);
+      if (res.ok) {
+        toast.success(willFreeze ? "Card frozen" : "Card unfrozen");
+      } else {
+        toast.error(`Couldn't update card: ${res.error.message}`);
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -52,21 +75,29 @@ export default function CardDetailPage({
               label={
                 card.data.status === "frozen" ? "Unfreeze card" : "Freeze card"
               }
-              hint="Block new charges instantly"
-              disabled
-              disabledHint="Wires up in Phase 4"
+              hint={
+                busy
+                  ? "Working…"
+                  : card.data.status === "terminated"
+                    ? "Card terminated"
+                    : card.data.status === "frozen"
+                      ? "Re-enable new charges"
+                      : "Block new charges instantly"
+              }
+              onClick={toggleFreeze}
+              disabled={busy !== null || card.data.status === "terminated"}
             />
             <ControlRow
               Icon={RefreshCw}
               label="Replace card"
               hint="Terminate this card and issue a new one"
               disabled
-              disabledHint="Wires up in Phase 4"
+              disabledHint="Coming soon"
             />
             <ControlLink
-              href={`/app/cards/${card.data.user_id}/controls`}
+              href={`/app/cards/${id}/controls`}
               label="Card controls"
-              hint="Merchant locks, geo locks, allow-list"
+              hint="Merchant locks, geo locks, allow-list (Phase 5)"
             />
           </div>
         </div>
@@ -81,13 +112,15 @@ interface ControlRowProps {
   hint: string;
   disabled?: boolean;
   disabledHint?: string;
+  onClick?: () => void;
 }
 
-function ControlRow({ Icon, label, hint, disabled, disabledHint }: ControlRowProps) {
+function ControlRow({ Icon, label, hint, disabled, disabledHint, onClick }: ControlRowProps) {
   return (
     <button
       type="button"
       disabled={disabled}
+      onClick={onClick}
       className="flex w-full items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
     >
       <div className="flex items-center gap-3">
