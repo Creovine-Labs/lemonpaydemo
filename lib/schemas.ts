@@ -39,6 +39,39 @@ export const refundHeaders = z.object({
   "idempotency-key": idempotencyKey,
 });
 
+// ---------- /api/deposits ----------
+// Top-up the user's own balance. Demo-only: in a real app this would be
+// the result of an inbound mobile-money or bank transfer.
+export const depositBody = z.object({
+  amount_rwf: rwfAmount.max(10_000_000), // 10M RWF/top-up cap so a typo doesn't break the UX
+  source: z
+    .enum(["bank_transfer", "mtn_momo", "airtel_money", "cash_deposit"])
+    .default("bank_transfer"),
+});
+export type DepositBody = z.infer<typeof depositBody>;
+
+// ---------- /api/services/electricity ----------
+// EUCL prepaid cash-power purchase.
+export const electricityBody = z.object({
+  meter_number: z
+    .string()
+    .trim()
+    .regex(/^\d{8,16}$/, "Meter number must be 8–16 digits"),
+  amount_rwf: rwfAmount.max(1_000_000),
+});
+export type ElectricityBody = z.infer<typeof electricityBody>;
+
+// ---------- /api/services/airtime ----------
+export const airtimeBody = z.object({
+  provider: z.enum(["mtn", "airtel"]),
+  phone_e164: z
+    .string()
+    .trim()
+    .regex(/^\+?\d{10,15}$/, "Phone number must be 10–15 digits"),
+  amount_rwf: rwfAmount.max(200_000),
+});
+export type AirtimeBody = z.infer<typeof airtimeBody>;
+
 // ---------- /api/transfers ----------
 export const transferBody = z.object({
   recipient_email: z.string().trim().toLowerCase().email(),

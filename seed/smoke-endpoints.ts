@@ -290,6 +290,50 @@ async function main() {
   const otpId = crypto.randomUUID();
   void otpId; // Verify-without-real-OTP is hard to smoke without leaking the code; skip.
 
+  // ----- Deposits + services -----
+  console.log("\nDeposits + services");
+  const deposit = await post<{ tx_id: string; amount_rwf: number }>(
+    `/api/deposits`,
+    { idToken, body: { amount_rwf: 50_000, source: "bank_transfer" } },
+  );
+  if (deposit.envelope.ok) {
+    pass("deposits.topup", `+${deposit.envelope.data.amount_rwf.toLocaleString()} RWF`);
+  } else {
+    fail("deposits.topup", JSON.stringify(deposit));
+  }
+
+  const cashpower = await post<{ token: string; units_kwh: number }>(
+    `/api/services/electricity`,
+    {
+      idToken,
+      body: { meter_number: "12345678", amount_rwf: 5_000 },
+    },
+  );
+  if (cashpower.envelope.ok) {
+    pass(
+      "services.electricity",
+      `token=${cashpower.envelope.data.token.slice(0, 9)}… (${cashpower.envelope.data.units_kwh} kWh)`,
+    );
+  } else {
+    fail("services.electricity", JSON.stringify(cashpower));
+  }
+
+  const airtime = await post<{ provider: string; phone: string }>(
+    `/api/services/airtime`,
+    {
+      idToken,
+      body: { provider: "mtn", phone_e164: "+250788000000", amount_rwf: 1_000 },
+    },
+  );
+  if (airtime.envelope.ok) {
+    pass(
+      "services.airtime",
+      `${airtime.envelope.data.provider.toUpperCase()} → ${airtime.envelope.data.phone}`,
+    );
+  } else {
+    fail("services.airtime", JSON.stringify(airtime));
+  }
+
   // ----- Transfers -----
   console.log("\nTransfers");
   const transferRes = await post<{ recipient_name: string; amount_rwf: number }>(

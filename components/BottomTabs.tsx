@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Home, Mail, Send, Settings } from "lucide-react";
+import { CreditCard, Home, Receipt, Send, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentType, SVGProps } from "react";
@@ -27,10 +27,10 @@ const TABS: Tab[] = [
     match: (p) => p.startsWith("/app/transfers"),
   },
   {
-    href: "/app/inbox",
-    label: "Inbox",
-    Icon: Mail,
-    match: (p) => p.startsWith("/app/inbox"),
+    href: "/app/pay",
+    label: "Pay",
+    Icon: Receipt,
+    match: (p) => p.startsWith("/app/pay") || p.startsWith("/app/topup"),
   },
   {
     href: "/app/settings",

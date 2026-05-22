@@ -2,10 +2,13 @@
 
 import { signOut } from "firebase/auth";
 import {
+  ArrowDownToLine,
   CreditCard,
   Home,
+  ListChecks,
   LogOut,
   Mail,
+  Receipt,
   Send,
   Settings,
 } from "lucide-react";
@@ -35,7 +38,7 @@ const LINKS: NavLink[] = [
   {
     href: "/app/transactions",
     label: "Transactions",
-    Icon: Mail,
+    Icon: ListChecks,
     match: (p) => p.startsWith("/app/transactions"),
   },
   {
@@ -45,10 +48,22 @@ const LINKS: NavLink[] = [
     match: (p) => p.startsWith("/app/cards"),
   },
   {
+    href: "/app/topup",
+    label: "Top up",
+    Icon: ArrowDownToLine,
+    match: (p) => p.startsWith("/app/topup"),
+  },
+  {
     href: "/app/transfers",
     label: "Send",
     Icon: Send,
     match: (p) => p.startsWith("/app/transfers"),
+  },
+  {
+    href: "/app/pay",
+    label: "Pay bills",
+    Icon: Receipt,
+    match: (p) => p.startsWith("/app/pay"),
   },
   {
     href: "/app/inbox",
