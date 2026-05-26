@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { BottomTabs } from "@/components/BottomTabs";
+import { LiraProvider } from "@/components/LiraProvider";
 import { MobileHeader } from "@/components/MobileHeader";
 import { SidebarNav } from "@/components/SidebarNav";
 import { useUserDoc } from "@/lib/hooks";
@@ -58,6 +59,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </main>
         <BottomTabs />
       </div>
+      <LiraProvider />
     </div>
   );
 }

@@ -73,3 +73,13 @@ env:
   - variable: OTP_JWT_SECRET
     secret: OTP_JWT_SECRET
     availability: [RUNTIME]
+
+  # ---------- Lira support widget ----------
+  # Org id is public (appears in the script tag); the widget secret signs the
+  # identity payload (data-sig) so Lira can trust the email/name we pass.
+  - variable: NEXT_PUBLIC_LIRA_ORG_ID
+    value: org-bc9df2d3-ad0b-4d3a-b90a-a3e2d288d126
+    availability: [BUILD, RUNTIME]
+  - variable: LIRA_WIDGET_SECRET
+    secret: LIRA_WIDGET_SECRET
+    availability: [RUNTIME]

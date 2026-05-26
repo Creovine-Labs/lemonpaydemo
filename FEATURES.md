@@ -155,11 +155,15 @@ Flutterwave webhooks handled: `charge.completed`, `refund.completed`, `chargebac
 
 ---
 
-## 11. Lira Chat Widget Anchor
+## 11. Lira Support Widget
 
-- Floating chat button bottom-right on every authenticated page
-- Slide-up panel hosts the Lira widget (separate Preact bundle, WebSocket to Lira backend)
-- Reachable from any `/app/*` route via the layout
+- Shared client bootstrap in [lib/lira-client.ts](lib/lira-client.ts) — loads `widget.liraintelligence.com/v1/widget.js` (with `data-position="bottom-right"`, so the floating launcher auto-mounts), then drives the JS SDK (`window.Lira.init` → `identify` → `setContext`)
+- Root layout ([app/layout.tsx](app/layout.tsx)) injects the widget script via `next/script` with `data-position="bottom-right"`, so the floating launcher renders on every page — landing page, login, signup, all of `/app/*` — anonymous before sign-in, identified after
+- [components/LiraProvider.tsx](components/LiraProvider.tsx) is mounted in the authenticated app shell ([app/app/layout.tsx](app/app/layout.tsx)) — once the user is loaded it calls `identify` + `setContext({ route, account })` on the existing session, and refreshes context on every route change
+- [components/LiraWidget.tsx](components/LiraWidget.tsx) is mounted on [app/app/help](app/app/help/) — calls `mountSupportPage("#lira-support-root")` for the fullscreen embed
+- Server-signed identity: `POST /api/lira/identity` ([app/api/lira/identity/route.ts](app/api/lira/identity/route.ts)) returns `{ email, name, sig }` where `sig = HMAC-SHA256(LIRA_WIDGET_SECRET, email)`. Secret stays in Secret Manager — never reaches the browser
+- AI actions registered with `Lira.registerAction`: `navigate.goto` (router push), `account.topup` (calls `/api/deposits`) — Lira's agent can invoke these from chat to actually move state in the app
+- Org id (`NEXT_PUBLIC_LIRA_ORG_ID`) is public; the widget secret stays server-side
 
 ---
 
