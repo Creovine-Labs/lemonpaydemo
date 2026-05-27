@@ -40,6 +40,7 @@ export interface LiraSDK {
   identify: (id: LiraIdentity) => Promise<void> | void;
   setContext: (ctx: Record<string, unknown>) => Promise<void> | void;
   mountSupportPage: (selector: string) => Promise<void> | void;
+  logout?: () => Promise<void> | void;
   registerAction?: (
     name: string,
     handler: (args: { payload: Record<string, unknown> }) => Promise<LiraActionResult> | LiraActionResult,
@@ -145,4 +146,18 @@ export async function setupLiraIdentity({
   });
 
   return sdk;
+}
+
+/**
+ * Clear the Lira session on sign-out so the conversation doesn't bleed into
+ * the next user on a shared browser. Safe to call when the widget never
+ * loaded or predates logout support — it just no-ops.
+ */
+export function logoutLira(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.Lira?.logout?.();
+  } catch (err) {
+    console.error("Lira logout failed:", err);
+  }
 }

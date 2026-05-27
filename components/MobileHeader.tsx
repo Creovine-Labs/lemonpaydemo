@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { auth } from "@/lib/firebase-client";
+import { logoutLira } from "@/lib/lira-client";
 
 interface MobileHeaderProps {
   fullName: string;
@@ -27,6 +28,7 @@ export function MobileHeader({ fullName, email }: MobileHeaderProps) {
   const router = useRouter();
 
   async function handleSignOut() {
+    logoutLira();
     await signOut(auth);
     router.replace("/login");
   }

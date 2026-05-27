@@ -15,6 +15,7 @@ import { signOut } from "firebase/auth";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { auth } from "@/lib/firebase-client";
+import { logoutLira } from "@/lib/lira-client";
 import { useUserDoc } from "@/lib/hooks";
 import { useAuth } from "@/lib/use-auth";
 
@@ -24,6 +25,7 @@ export default function SettingsHub() {
   const profile = useUserDoc(user?.uid);
 
   async function handleSignOut() {
+    logoutLira();
     await signOut(auth);
     router.replace("/login");
   }
